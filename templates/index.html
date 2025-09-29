@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain Audit Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #7209b7;
+      --success: #4cc9f0;
+      --warning: #f72585;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --border: #e9ecef;
+      --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      --hover-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      color: var(--dark);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 30px 20px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .logo-icon {
+      background: var(--primary);
+      color: white;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+    
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--gray);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .search-section {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    
+    .input-group {
+      display: flex;
+      max-width: 700px;
+      margin: 0 auto 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .input-group:focus-within {
+      box-shadow: 0 8px 25px rgba(67, 97, 238, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    input {
+      flex: 1;
+      padding: 18px 20px;
+      border: none;
+      font-size: 16px;
+      outline: none;
+      background: var(--light);
+    }
+    
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0 35px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    button:hover {
+      background: var(--primary-dark);
+    }
+    
+    button:disabled {
+      background: var(--gray);
+      cursor: not-allowed;
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 30px;
+    }
+    
+    .spinner {
+      border: 4px solid rgba(67, 97, 238, 0.2);
+      border-left: 4px solid var(--primary);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .results {
+      display: none;
+    }
+    
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      background: white;
+      padding: 20px 30px;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+    }
+    
+    .domain-title {
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    
+    .score-badge {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--hover-shadow);
+    }
+    
+    .card-header {
+      background: var(--primary);
+      color: white;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .card-header i {
+      font-size: 24px;
+    }
+    
+    .card-content {
+      padding: 25px;
+    }
+    
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .info-table tr {
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .info-table tr:last-child {
+      border-bottom: none;
+    }
+    
+    .info-table td {
+      padding: 12px 5px;
+      vertical-align: top;
+    }
+    
+    .info-table td:first-child {
+      font-weight: 600;
+      width: 40%;
+      color: var(--dark);
+    }
+    
+    .info-table td:last-child {
+      color: var(--gray);
+    }
+    
+    .email-list {
+      list-style: none;
+      margin-top: 10px;
+    }
+    
+    .email-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .email-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .email-list li i {
+      color: var(--primary);
+    }
+    
+    .tech-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .tech-tag {
+      background: rgba(67, 97, 238, 0.1);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 50px;
+      font-size: 0.9rem;
+    }
+    
+    .ads-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .ad-badge {
+      background: rgba(247, 37, 133, 0.1);
+      color: var(--warning);
+      padding: 6px 12px;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    
+    .status-active {
+      background: rgba(76, 201, 240, 0.1);
+      color: var(--success);
+    }
+    
+    .status-inactive {
+      background: rgba(108, 117, 125, 0.1);
+      color: var(--gray);
+    }
+    
+    .security-status {
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-left: 5px;
+    }
+    
+    .security-good {
+      background: rgba(76, 201, 240, 0.2);
+      color: #0a9396;
+    }
+    
+    .security-bad {
+      background: rgba(247, 37, 133, 0.2);
+      color: #9d0208;
+    }
+    
+    
+    .tech-category-box {
+  margin-bottom: 12px;
+  padding: 10px;
+  border-left: 3px solid #0078ff;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+.tech-category-box h4 {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+    .error-message {
+      background: rgba(247, 37, 133, 0.1);
+      color: var(--warning);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin: 20px 0;
+      display: none;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      padding: 20px;
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .input-group {
+        flex-direction: column;
+        border-radius: 12px;
+      }
+      
+      input, button {
+        width: 100%;
+        border-radius: 0;
+      }
+      
+      button {
+        justify-content: center;
+        padding: 15px;
+      }
+      
+      .results-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+      
+      h1 {
+        font-size: 2.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-search"></i>
+        </div>
+        <h1>Domain Audit Tool</h1>
+      </div>
+      <p class="subtitle">Comprehensive website analysis for technical insights, SEO metrics, and marketing intelligence</p>
+    </header>
+    
+    <section class="search-section">
+      <div class="input-group">
+        <input type="text" id="domainInput" placeholder="Enter domain (e.g. google.com)" value="google.com">
+        <button onclick="auditDomain()" id="auditBtn">
+          <i class="fas fa-search"></i> Analyze Domain
+        </button>
+      </div>
+      <p>Enter any domain name to get a complete analysis of its technical setup and online presence</p>
+    </section>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <h3>Analyzing Domain</h3>
+      <p>This may take a few seconds as we gather comprehensive data...</p>
+    </div>
+    
+    <div class="error-message" id="errorMessage">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span id="errorText">An error occurred while analyzing the domain.</span>
+    </div>
+    
+    <div class="results" id="results">
+      <div class="results-header">
+        <h2 class="domain-title" id="domainTitle">Domain Analysis</h2>
+        <div class="score-badge">
+          <i class="fas fa-star"></i>
+          <span id="scoreText">Analysis Complete</span>
+        </div>
+      </div>
+      
+      <div class="results-grid">
+        <!-- Domain Information Card -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-server"></i>
+            <h3>Domain Information</h3>
+          </div>
+          <div class="card-content">
+            <table class="info-table" id="domainInfoTable">
+              <tr>
+                <td>Registrar</td>
+                <td id="registrar">N/A</td>
+              </tr>
+              <tr>
+                <td>Created On</td>
+                <td id="creationDate">N/A</td>
+              </tr>
+              <tr>
+                <td>Expires On</td>
+                <td id="expirationDate">N/A</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Email Setup Card -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-envelope"></i>
+            <h3>Email Setup</h3>
+          </div>
+          <div class="card-content">
+            <table class="info-table">
+              <tr>
+                <td>Provider</td>
+                <td id="emailProvider">N/A</td>
+              </tr>
+            </table>
+            <h4 style="margin-top: 20px; margin-bottom: 10px;">Contact Emails</h4>
+            <ul class="email-list" id="emailList">
+              <li><i class="fas fa-inbox"></i> No emails found on the website</li>
+            </ul>
+          </div>
+        </div>
+        
+        <!-- Technology Stack Card -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-code"></i>
+            <h3>Technology Stack</h3>
+          </div>
+          <div class="card-content">
+            <div id="techContent">
+              <p>No technology information available.</p>
+            </div>
+            <div class="tech-tags" id="techTags">
+              <!-- Technology tags will be inserted here -->
+            </div>
+          </div>
+        </div>
+        
+        <!-- WordPress Info Card -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fab fa-wordpress"></i>
+            <h3>WordPress Info</h3>
+          </div>
+          <div class="card-content">
+            <table class="info-table" id="wpTable">
+              <tr>
+                <td>WordPress</td>
+                <td id="wpStatus">Not detected</td>
+              </tr>
+              <tr>
+                <td>Version</td>
+                <td id="wpVersion">N/A</td>
+              </tr>
+              <tr>
+                <td>Theme</td>
+                <td id="wpTheme">N/A</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Ads & Tracking Card -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-ad"></i>
+            <h3>Ads & Tracking</h3>
+          </div>
+          <div class="card-content">
+            <p id="adsContent">No ads detected.</p>
+            <div class="ads-list" id="adsList">
+              <!-- Ad badges will be inserted here -->
+            </div>
+          </div>
+        </div>
+        
+        <!-- Security Headers Card -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-shield-alt"></i>
+            <h3>Security Headers</h3>
+          </div>
+          <div class="card-content">
+            <table class="info-table" id="securityTable">
+              <tr>
+                <td>Content Security Policy</td>
+                <td id="cspStatus">Checking...</td>
+              </tr>
+              <tr>
+                <td>Clickjacking Protection</td>
+                <td id="clickjackingStatus">Checking...</td>
+              </tr>
+              <tr>
+                <td>MIME Sniffing Protection</td>
+                <td id="mimeStatus">Checking...</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Performance Card -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-tachometer-alt"></i>
+            <h3>Performance</h3>
+          </div>
+          <div class="card-content">
+            <table class="info-table" id="performanceTable">
+              <tr>
+                <td>Performance Info</td>
+                <td id="performanceInfo">Checking...</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+       </div>
+      </div>
+    </div>
+    
+    <footer>
+      <p>ERPROOTS JR DEVELOPER &copy; 2025 | Comprehensive Website Analysis</p>
+    </footer>
+  </div>
+
+  <script>
+    async function auditDomain() {
+      const domain = document.getElementById("domainInput").value.trim();
+      if (!domain) {
+        showError("Please enter a domain name");
+        return;
+      }
+
+      // Reset UI
+      document.getElementById("loading").style.display = "block";
+      document.getElementById("results").style.display = "none";
+      hideError();
+      
+      // Update domain title
+      document.getElementById("domainTitle").textContent = `Analysis: ${domain}`;
+
+      try {
+        const res = await fetch(`/audit/${domain}`);
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status} status`);
+        }
+        const data = await res.json();
+
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("results").style.display = "block";
+        
+        // Update score badge
+        document.getElementById("scoreText").textContent = "Analysis Complete";
+
+        // Domain Info
+        if (data["Domain Info"]) {
+          document.getElementById("registrar").textContent = data["Domain Info"]["Registrar"] || "N/A";
+          document.getElementById("creationDate").textContent = data["Domain Info"]["Created On"] || "N/A";
+          document.getElementById("expirationDate").textContent = data["Domain Info"]["Expires On"] || "N/A";
+        }
+
+        // Email Setup
+        if (data["Email Setup"]) {
+          document.getElementById("emailProvider").textContent = data["Email Setup"]["Provider"] || "N/A";
+          
+          const emailListEl = document.getElementById("emailList");
+          emailListEl.innerHTML = "";
+          
+          if (data["Email Setup"]["Contact Emails"] && data["Email Setup"]["Contact Emails"].length > 0) {
+            data["Email Setup"]["Contact Emails"].forEach(email => {
+              if (email !== "Not found") {
+                const li = document.createElement("li");
+                li.innerHTML = `<i class="fas fa-envelope"></i> ${email}`;
+                emailListEl.appendChild(li);
+              }
+            });
+          }
+          
+          if (emailListEl.children.length === 0) {
+            emailListEl.innerHTML = "<li><i class='fas fa-inbox'></i> No emails found on the website</li>";
+          }
+        }
+const techContentEl = document.getElementById("techContent");
+const techTagsEl = document.getElementById("techTags");
+techContentEl.innerHTML = "";
+techTagsEl.innerHTML = "";
+
+const techData = data["Website Tech"];
+
+if (techData && Object.keys(techData).length > 0) {
+  // If grouped object
+  if (!Array.isArray(techData)) {
+    techContentEl.innerHTML = "<p>Detected technologies grouped by category:</p>";
+    for (const [category, technologies] of Object.entries(techData)) {
+      const groupBox = document.createElement("div");
+      groupBox.className = "tech-category-box";
+
+      const title = document.createElement("h4");
+      title.textContent = category.replace(/-/g, " ").toUpperCase();
+      title.style.marginBottom = "6px";
+      groupBox.appendChild(title);
+
+      const tagsWrapper = document.createElement("div");
+      tagsWrapper.style.display = "flex";
+      tagsWrapper.style.flexWrap = "wrap";
+      tagsWrapper.style.gap = "6px";
+
+      technologies.forEach(tech => {
+        const tag = document.createElement("div");
+        tag.className = "tech-tag";
+        tag.textContent = tech;
+        tagsWrapper.appendChild(tag);
+      });
+
+      groupBox.appendChild(tagsWrapper);
+      techTagsEl.appendChild(groupBox);
+    }
+  } else {
+    // Fallback: flat list
+    techContentEl.innerHTML = "<p>Detected technologies:</p>";
+    techData.forEach(tech => {
+      const tag = document.createElement("div");
+      tag.className = "tech-tag";
+      tag.textContent = tech;
+      techTagsEl.appendChild(tag);
+    });
+  }
+} else {
+  techContentEl.innerHTML = "<p>No technology information available.</p>";
+}
+
+
+        // Ads
+        const adsContentEl = document.getElementById("adsContent");
+        const adsListEl = document.getElementById("adsList");
+        adsContentEl.textContent = "";
+        adsListEl.innerHTML = "";
+        
+        if (data["Ads Running"] && data["Ads Running"].length > 0 && data["Ads Running"][0] !== "No common ad networks detected") {
+          adsContentEl.textContent = "Detected advertising networks:";
+          data["Ads Running"].forEach(ad => {
+            const badge = document.createElement("div");
+            badge.className = "ad-badge";
+            badge.innerHTML = `<i class="fas fa-ad"></i> ${ad}`;
+            adsListEl.appendChild(badge);
+          });
+        } else {
+          adsContentEl.textContent = "No ads detected.";
+        }
+
+        // WordPress
+        if (data["WordPress"]) {
+          document.getElementById("wpStatus").textContent = data["WordPress"]["Is WordPress"];
+          document.getElementById("wpVersion").textContent = data["WordPress"]["Version"] || "N/A";
+          document.getElementById("wpTheme").textContent = data["WordPress"]["Theme"] || "N/A";
+          
+          // Update status badge
+          const wpStatusEl = document.getElementById("wpStatus");
+          wpStatusEl.innerHTML = data["WordPress"]["Is WordPress"] === "Yes" ? 
+            '<span class="status-badge status-active">Yes</span>' : 
+            '<span class="status-badge status-inactive">No</span>';
+        }
+
+        // Security Headers
+        if (data["Security"]) {
+          const cspStatus = document.getElementById("cspStatus");
+          const clickjackingStatus = document.getElementById("clickjackingStatus");
+          const mimeStatus = document.getElementById("mimeStatus");
+          
+          // CSP
+          if (data["Security"]["Content Security Policy"] === "Present") {
+            cspStatus.innerHTML = `<span>Found</span><span class="security-status security-good">Good</span>`;
+          } else {
+            cspStatus.innerHTML = `<span>Not Found</span><span class="security-status security-bad">Missing</span>`;
+          }
+          
+          // Clickjacking Protection
+          if (data["Security"]["Clickjacking Protection"] === "Present") {
+            clickjackingStatus.innerHTML = `<span>Protected</span><span class="security-status security-good">Good</span>`;
+          } else {
+            clickjackingStatus.innerHTML = `<span>Not Found</span><span class="security-status security-bad">Vulnerable</span>`;
+          }
+          
+          // MIME Sniffing Protection
+          if (data["Security"]["MIME Sniffing Protection"] === "Present") {
+            mimeStatus.innerHTML = `<span>Protected</span><span class="security-status security-good">Good</span>`;
+          } else {
+            mimeStatus.innerHTML = `<span>Not Found</span><span class="security-status security-bad">Vulnerable</span>`;
+          }
+        }
+
+        // Performance
+        if (data["Performance"]) {
+          document.getElementById("performanceInfo").textContent = data["Performance"];
+        }
+
+      } catch (err) {
+        document.getElementById("loading").style.display = "none";
+        showError("Error fetching domain information: " + err.message);
+        console.error(err);
+      }
+    }
+    
+    function showError(message) {
+      document.getElementById("errorText").textContent = message;
+      document.getElementById("errorMessage").style.display = "block";
+    }
+    
+    function hideError() {
+      document.getElementById("errorMessage").style.display = "none";
+    }
+    
+    // Allow Enter key to trigger audit
+    document.getElementById("domainInput").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        auditDomain();
+      }
+    });
+    
+    // Auto-focus on input
+    document.getElementById("domainInput").focus();
+    
+    // Auto-analyze google.com on page load
+    window.addEventListener('load', function() {
+      setTimeout(() => {
+        auditDomain();
+      }, 500);
+    });
+  </script>
+</body>
+</html>
